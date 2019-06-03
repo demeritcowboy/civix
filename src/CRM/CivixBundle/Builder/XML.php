@@ -11,62 +11,64 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class XML implements Builder {
 
-    protected $path, $xml;
+  protected $path, $xml;
 
-    function __construct($path) {
-        $this->path = $path;
+  public function __construct($path) {
+    $this->path = $path;
+  }
+
+  /**
+   * Get the xml document
+   *
+   * @return SimpleXMLElement
+   */
+  public function get() {
+    return $this->xml;
+  }
+
+  public function set($xml) {
+    $this->xml = $xml;
+  }
+
+  public function loadInit(&$ctx) {
+    if (file_exists($this->path)) {
+      $this->load($ctx);
     }
-
-    /**
-     * Get the xml document
-     *
-     * @return SimpleXMLElement
-     */
-    function get() {
-        return $this->xml;
+    else {
+      $this->init($ctx);
     }
+  }
 
-    function set($xml) {
-        $this->xml = $xml;
-    }
+  /**
+   * Initialize a new XML document
+   */
+  public function init(&$ctx) {
+  }
 
-    function loadInit(&$ctx) {
-        if (file_exists($this->path)) {
-            $this->load($ctx);
-        } else {
-            $this->init($ctx);
-        }
-    }
+  /**
+   * Read from file
+   */
+  public function load(&$ctx) {
+    $dom = new DomDocument();
+    $dom->load($this->path);
+    $dom->xinclude();
+    $this->xml = simplexml_import_dom($dom);
+  }
 
-    /**
-     * Initialize a new XML document
-     */
-    function init(&$ctx) {
-    }
+  /**
+   * Write the xml document
+   */
+  public function save(&$ctx, OutputInterface $output) {
+    $output->writeln("<info>Write " . $this->path . "</info>");
 
-    /**
-     * Read from file
-     */
-    function load(&$ctx) {
-        $dom = new DomDocument( );
-        $dom->load($this->path);
-        $dom->xinclude( );
-        $this->xml = simplexml_import_dom( $dom );
-    }
+    // force pretty printing with encode/decode cycle
+    $outXML = $this->get()->saveXML();
+    $xml = new DOMDocument();
+    $xml->encoding = 'iso-8859-1';
+    $xml->preserveWhiteSpace = FALSE;
+    $xml->formatOutput = TRUE;
+    $xml->loadXML($outXML);
+    file_put_contents($this->path, $xml->saveXML());
+  }
 
-    /**
-     * Write the xml document
-     */
-    function save(&$ctx, OutputInterface $output) {
-        $output->writeln("<info>Write " . $this->path . "</info>");
-
-        // force pretty printing with encode/decode cycle
-        $outXML = $this->get()->saveXML();
-        $xml = new DOMDocument();
-        $xml->encoding = 'iso-8859-1';
-        $xml->preserveWhiteSpace = false;
-        $xml->formatOutput = true;
-        $xml->loadXML($outXML);
-        file_put_contents($this->path, $xml->saveXML());
-    }
 }

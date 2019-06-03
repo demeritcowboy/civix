@@ -1,0 +1,41 @@
+{
+    "chmod": "0755",
+    "directories": [
+        "src"
+    ],
+    "finder": [
+        {
+            "name": "*.php",
+            "exclude": [
+              "phpunit",
+              "php-parser", "jakub-onderka",
+              "Tests", "Test", "tests", "test"
+            ],
+            "in": "vendor"
+        },
+        {
+            "name": "*.png",
+            "in": "images"
+        },
+        {
+            "name": "bootstrap.php",
+            "in": "vendor/nikic/php-parser/lib"
+        },
+        {
+            "name": "Autoloader.php",
+            "in": "vendor/nikic/php-parser/lib/PhpParser"
+        },
+        {
+            "name": "*.csv",
+            "in": "vendor/totten/license-data"
+        },
+        {
+            "name": "*.txt",
+            "in": "vendor/totten/license-data/licenses"
+        }
+    ],
+    "git-version": "package_version",
+    "main": "bin/civix",
+    "output": "bin/civix.phar",
+    "stub": true
+}

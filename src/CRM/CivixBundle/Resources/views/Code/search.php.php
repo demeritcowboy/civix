@@ -1,6 +1,8 @@
 <?php
 echo "<?php\n";
+$_namespace = preg_replace(':/:', '_', $namespace);
 ?>
+use <?php echo $_namespace ?>_ExtensionUtil as E;
 
 /**
  * A custom contact search
@@ -17,16 +19,16 @@ class <?php echo $searchClassName ?> extends CRM_Contact_Form_Search_Custom_Base
    * @return void
    */
   function buildForm(&$form) {
-    CRM_Utils_System::setTitle(ts('My Search Title'));
+    CRM_Utils_System::setTitle(E::ts('My Search Title'));
 
     $form->add('text',
       'household_name',
-      ts('Household Name'),
+      E::ts('Household Name'),
       TRUE
     );
 
-    $stateProvince = array('' => ts('- any state/province -')) + CRM_Core_PseudoConstant::stateProvince();
-    $form->addElement('select', 'state_province_id', ts('State/Province'), $stateProvince);
+    $stateProvince = array('' => E::ts('- any state/province -')) + CRM_Core_PseudoConstant::stateProvince();
+    $form->addElement('select', 'state_province_id', E::ts('State/Province'), $stateProvince);
 
     // Optionally define default search values
     $form->setDefaults(array(
@@ -64,10 +66,10 @@ class <?php echo $searchClassName ?> extends CRM_Contact_Form_Search_Custom_Base
   function &columns() {
     // return by reference
     $columns = array(
-      ts('Contact Id') => 'contact_id',
-      ts('Contact Type') => 'contact_type',
-      ts('Name') => 'sort_name',
-      ts('State') => 'state_province',
+      E::ts('Contact Id') => 'contact_id',
+      E::ts('Contact Type') => 'contact_type',
+      E::ts('Name') => 'sort_name',
+      E::ts('State') => 'state_province',
     );
     return $columns;
   }
@@ -75,9 +77,14 @@ class <?php echo $searchClassName ?> extends CRM_Contact_Form_Search_Custom_Base
   /**
    * Construct a full SQL query which returns one page worth of results
    *
+   * @param int $offset
+   * @param int $rowcount
+   * @param null $sort
+   * @param bool $includeContactIDs
+   * @param bool $justIDs
    * @return string, sql
    */
-  function all($offset = 0, $rowcount = 0, $sort = NULL, $includeContactIDs = FALSE) {
+  function all($offset = 0, $rowcount = 0, $sort = NULL, $includeContactIDs = FALSE, $justIDs = FALSE) {
     // delegate to $this->sql(), $this->select(), $this->from(), $this->where(), etc.
     return $this->sql($this->select(), $offset, $rowcount, $sort, $includeContactIDs, NULL);
   }
@@ -115,6 +122,7 @@ class <?php echo $searchClassName ?> extends CRM_Contact_Form_Search_Custom_Base
   /**
    * Construct a SQL WHERE clause
    *
+   * @param bool $includeContactIDs
    * @return string, sql fragment with conditional expressions
    */
   function where($includeContactIDs = FALSE) {

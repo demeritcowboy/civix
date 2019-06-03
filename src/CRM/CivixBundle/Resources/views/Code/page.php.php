@@ -1,17 +1,19 @@
 <?php
 echo "<?php\n";
+$_namespace = preg_replace(':/:', '_', $namespace);
 ?>
+use <?php echo $_namespace ?>_ExtensionUtil as E;
 
-require_once 'CRM/Core/Page.php';
+class <?php echo preg_replace(':/:', '_', $fullClassName) ?> extends CRM_Core_Page {
 
-class <?php echo preg_replace(':/:','_',$namespace) ?>_Page_<?php echo $pageClassName ?> extends CRM_Core_Page {
-  function run() {
+  public function run() {
     // Example: Set the page-title dynamically; alternatively, declare a static title in xml/Menu/*.xml
-    CRM_Utils_System::setTitle(ts('<?php echo $pageClassName ?>'));
+    CRM_Utils_System::setTitle(E::ts('<?php echo $shortClassName ?>'));
 
     // Example: Assign a variable for use in a template
     $this->assign('currentTime', date('Y-m-d H:i:s'));
 
     parent::run();
   }
+
 }

@@ -13,37 +13,51 @@ use Symfony\Component\Process\Process;
  */
 class Commands {
 
-    /**
-     * Create a new process which executes a different commands
-     *
-     * @param string $cmd
-     * @return \Symfony\Component\Process\Process
-     */
-    public static function createProcess($cmd, $timeout = 300)
-    {
-        $process = new Process(self::createShellCommand($cmd), null, null, null, $timeout);
-        return $process;
-    }
+  /**
+   * Create a new process which executes a different commands
+   *
+   * @param string $cmd
+   * @return \Symfony\Component\Process\Process
+   */
+  public static function createProcess($cmd, $timeout = 300) {
+    $process = new Process(self::createShellCommand($cmd), NULL, NULL, NULL, $timeout);
+    return $process;
+  }
 
-    /**
-     * Generate the shell statement for invoking of the Symfony commands
-     *
-     * @param $cmd symfony command
-     * @return string a valid shell command
-     */
-    public static function createShellCommand($cmd)
-    {
-        $php = escapeshellarg(self::getPhp());
-        $console = escapeshellarg($_SERVER['PHP_SELF']);
-        return $php.' '.$console.' '.$cmd;
-    }
+  /**
+   * Generate the shell statement for invoking of the Symfony commands
+   *
+   * @param $cmd symfony command
+   * @return string a valid shell command
+   */
+  public static function createShellCommand($cmd) {
+    $php = escapeshellarg(self::getPhp());
+    $console = escapeshellarg($_SERVER['PHP_SELF']);
+    return $php . ' ' . $console . ' ' . $cmd;
+  }
 
-    protected static function getPhp()
-    {
-        $phpFinder = new PhpExecutableFinder();
-        if (!$phpPath = $phpFinder->find()) {
-            throw new \RuntimeException('The php executable could not be found, add it to your PATH environment variable and try again');
-        }
-        return $phpPath;
+  protected static function getPhp() {
+    $phpFinder = new PhpExecutableFinder();
+    if (!$phpPath = $phpFinder->find()) {
+      throw new \RuntimeException('The php executable could not be found, add it to your PATH environment variable and try again');
     }
+    return $phpPath;
+  }
+
+  /**
+   * Determine the full path to an executable
+   *
+   * @param $name
+   * @return string|FALSE
+   */
+  public static function findExecutable($name) {
+    $paths = explode(PATH_SEPARATOR, getenv('PATH'));
+    foreach ($paths as $path) {
+      if (file_exists("$path/$name")) {
+        return "$path/$name";
+      }
+    }
+    return FALSE;
+  }
+
 }

@@ -5,39 +5,23 @@
     "license": "AGPL-3.0",
     "require": {
         "php": ">=5.3.3",
-        "symfony/symfony": "2.1.0",
-        "twig/extensions": "v1.0.0-alpha",
-        "symfony/swiftmailer-bundle": "2.1.0",
-        "symfony/monolog-bundle": "2.1.0",
-        "sensio/distribution-bundle": "2.1.0",
-        "sensio/generator-bundle": "2.1.0",
-        "jms/security-extra-bundle": "1.1.*",
-        "jms/di-extra-bundle": "1.0.*"
+        "civicrm/cv": "~0.2",
+        "symfony/console": "~2.8",
+        "symfony/process": "~2.8",
+        "symfony/templating": "~2.8",
+        "symfony/var-dumper": "~2.8",
+        "totten/license-data": "dev-master"
     },
     "autoload": {
         "psr-0": {
-            "CRM\\CivixBundle": "src/",
-            "CRM\\ClientBundle": "src/"
+            "CRM\\CivixBundle": "src/"
          }
     },
-    "scripts": {
-        "post-install-cmd": [
-            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap",
-            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::clearCache",
-            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::installAssets"
-        ],
-        "post-update-cmd": [
-            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap",
-            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::clearCache",
-            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::installAssets"
-        ]
-    },
+    "bin": [
+        "bin/civix"
+    ],
     "config": {
         "bin-dir": "bin"
-    },
-    "extra": {
-        "symfony-app-dir": "app",
-        "symfony-web-dir": "web"
     },
     "authors": [
         {
