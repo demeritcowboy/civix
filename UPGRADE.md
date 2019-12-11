@@ -41,6 +41,53 @@ The steps for upgrading the `Upgrader` are as follows:
 
 ## Special Tasks
 
+### Upgrade to v19.11.0+: APIv4 and PSR-4
+
+APIv4 looks for classes in the `Civi\Api4` namespace and `Civi/Api4` folder. 
+To support generation of APIv4 code, the `info.xml` should have a
+corresponding classloader:
+
+```xml
+  <classloader>
+    <psr4 prefix="Civi\" path="Civi" />
+  </classloader>
+```
+
+### Upgrade to v19.06.2+: PHPUnit (Optional; #155)
+
+The templates for PHPUnit tests have been updated to match a major
+transition in PHPUnit -- *all upstream base-classes were renamed*:
+
+* `PHPUnit_Framework_TestCase` is the base-class in PHPUnit 4 and earlier
+* `\PHPUnit\Framework\TestCase`` is the base-class in PHPUnit 6 and later
+* PHPUnit 5 is a transitional version which supports both naming conventions.
+
+In recent years, documentation+tooling in Civi have encouraged usage of
+PHPUnit 5, so (hopefully) most environments are compatible with the newer naming.
+
+Going forward, `civix` will generate templates using the newer naming.
+
+To be consistent and forward-compatible, you should consider updating your
+existing unit-tests to use the name base-classes.
+
+### Upgrade to v19.06.2+: hook_civicrm_themes
+
+Civix-based modules should implement `hook_civicrm_themes` to handle any
+theme registrations.
+
+At time of writing, the functionality is flagged as *experimental*.
+Never-the-less, you may safely add the associated hook stub (regardless of
+whether you use the functionality).
+
+```php
+/**
+ * Implements hook_civicrm_themes().
+ */
+function myext_civicrm_themes(&$themes) {
+  _myext_civix_civicrm_themes($themes);
+}
+```
+
 ### Upgrade to v18.02.0+: hook_civicrm_entityTypes
 
 Civix-based modules should pass metadata about custom database entities
@@ -56,7 +103,7 @@ whether you use the functionality).
  *
  * Declare entity types provided by this module.
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_entityTypes
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_entityTypes
  */
 function myext_civicrm_entityTypes(&$entityTypes) {
   _myext_civix_civicrm_entityTypes($entityTypes);
@@ -140,7 +187,7 @@ store schema versions in the `civicrm_extension` table.
 /**
  * Implements hook_civicrm_postInstall().
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_postInstall
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_postInstall
  */
 function myext_civicrm_postInstall() {
   _myext_civix_civicrm_postInstall();
@@ -192,7 +239,7 @@ the helper function for `navigationMenu`.
 /**
  * Implements hook_civicrm_navigationMenu().
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_navigationMenu
  */
 function myext_civicrm_navigationMenu(&$menu) {
   _myext_civix_insert_navigation_menu($menu, NULL, array(
@@ -221,7 +268,7 @@ and auto-register them with the Civi-Angular base app (`civicrm/a/#`).
  * Note: This hook only runs in CiviCRM 4.5+. It may
  * use features only available in v4.6+.
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_caseTypes
  */
 function myext_civicrm_angularModules(&$angularModules) {
   _myext_civix_civicrm_angularModules($angularModules);
@@ -241,7 +288,7 @@ Civix-based modules should scan for any CiviCase XML files in
  *
  * Note: This hook only runs in CiviCRM 4.4+.
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_caseTypes
  */
 function myext_civicrm_caseTypes(&$caseTypes) {
   _myext_civix_civicrm_caseTypes($caseTypes);
@@ -257,7 +304,7 @@ Civix-based modules should scan for any settings files in
 /**
  * Implementation of hook_civicrm_alterSettingsFolders
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_alterSettingsFolders
  */
 function myext_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _myext_civix_civicrm_alterSettingsFolders($metaDataFolders);

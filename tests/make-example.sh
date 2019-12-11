@@ -3,7 +3,7 @@
 ## Quick hack for manually testing all commands
 BUILDDIR="$1"
 BUILDNAME="$2"
-WORKINGDIR="$BUILDDIR/build/$BUILDNAME/sites/all/modules/civicrm/tools/extensions"
+WORKINGDIR="$BUILDDIR/build/$BUILDNAME/web/sites/all/modules/civicrm/tools/extensions"
 EXMODULE=org.civicrm.civixexample
 
 # validate environment
@@ -54,7 +54,9 @@ pushd $WORKINGDIR
     $CIVIX $VERBOSITY generate:api MyEntity MyAction
     $CIVIX $VERBOSITY generate:case-type MyLabel MyName
     # $CIVIX $VERBOSITY generate:custom-xml -f --data="FIXME" --uf="FIXME"
-    $CIVIX $VERBOSITY generate:entity MyEntity
+    $CIVIX $VERBOSITY generate:entity MyEntityFour
+    $CIVIX $VERBOSITY generate:entity MyEntityThree -A3
+    $CIVIX $VERBOSITY generate:entity MyEntityThreeFour -A3,4
     $CIVIX $VERBOSITY generate:entity-boilerplate
     $CIVIX $VERBOSITY generate:form MyForm civicrm/my-form
     $CIVIX $VERBOSITY generate:form My_StuffyForm civicrm/my-stuffy-form
@@ -71,19 +73,21 @@ pushd $WORKINGDIR
     $CIVIX $VERBOSITY generate:angular-module
     $CIVIX $VERBOSITY generate:angular-page FooCtrl foo
     $CIVIX $VERBOSITY generate:angular-directive foo-bar
+    $CIVIX $VERBOSITY generate:theme
+    $CIVIX $VERBOSITY generate:theme extratheme
   popd
 
   cv api extension.install key=$EXMODULE
 
   ## Make sure the unit tests are runnable.
   pushd $EXMODULE
-    phpunit4 ./tests/phpunit/CRM/Civiexample/FooTest.php
-    phpunit4 ./tests/phpunit/CRM/Civiexample/LegacyTest.php
-    phpunit4 ./tests/phpunit/Civi/Civiexample/BarTest.php
-    phpunit4 ./tests/phpunit/Civi/Civiexample/EndTest.php
-    phpunit4 ./tests/phpunit/Civi/CiviExample/PHPUnitTest.php
-    phpunit4 --group headless
-    phpunit4 --group e2e
+    phpunit5 ./tests/phpunit/CRM/Civiexample/FooTest.php
+    phpunit5 ./tests/phpunit/CRM/Civiexample/LegacyTest.php
+    phpunit5 ./tests/phpunit/Civi/Civiexample/BarTest.php
+    phpunit5 ./tests/phpunit/Civi/Civiexample/EndTest.php
+    phpunit5 ./tests/phpunit/Civi/CiviExample/PHPUnitTest.php
+    phpunit5 --group headless
+    phpunit5 --group e2e
 
     codecept generate:cest acceptance HelloWorld
     codecept run
