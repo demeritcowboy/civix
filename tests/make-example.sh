@@ -22,13 +22,13 @@ if [ ! -d $WORKINGDIR ]; then
 fi
 
 set -ex
-if [ ! -f "box.json" ]; then
+if [ ! -f "box.json" -o ! -f "build.sh" ]; then
   echo "Must call from civix root dir"
   exit 1
 fi
 
 # (re)build civix
-php -dphar.readonly=0 `which box` build
+[ -z "$SKIP_PHAR_BUILD" ] && ./build.sh
 CIVIX=$PWD/bin/civix.phar
 VERBOSITY=-v
 
@@ -51,7 +51,8 @@ pushd $WORKINGDIR
   fi
 
   pushd $EXMODULE
-    $CIVIX $VERBOSITY generate:api MyEntity MyAction
+    $CIVIX $VERBOSITY generate:api MyEntity Myaction
+    $CIVIX $VERBOSITY generate:api MyEntity myaction2
     $CIVIX $VERBOSITY generate:case-type MyLabel MyName
     # $CIVIX $VERBOSITY generate:custom-xml -f --data="FIXME" --uf="FIXME"
     $CIVIX $VERBOSITY generate:entity MyEntityFour
