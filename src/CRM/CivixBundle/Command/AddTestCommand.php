@@ -9,6 +9,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use CRM\CivixBundle\Builder\Dirs;
 use CRM\CivixBundle\Builder\Info;
+use CRM\CivixBundle\Builder\PHPUnitGenerateInitFiles;
 use CRM\CivixBundle\Utils\Path;
 use Exception;
 
@@ -32,6 +33,10 @@ In creating a test, you may specify a template:
             may spawn  requests to Civi using HTTP or cv(). However, spawning
             separate requests will be slower, and data-cleanup may take more
             effort.
+  mink:     A front-end test based on the Mink framework adapted for CiviCRM.
+            They are slow but allow simulating a full system by controlling a
+            browser to navigate through pages, while also being able to call
+            backend php functions in between clicks.
   legacy:   A variation of `headless` based on CiviUnitTestCase.
             It is provided primarily for testing purposes.
   phpunit:  A test suite based on the PHPUnit_Framework_TestCase. Provides an 
@@ -49,7 +54,7 @@ as separate groups:
   phpunit4 --group headless
   phpunit4 --group e2e
 ')
-      ->addOption('template', NULL, InputOption::VALUE_REQUIRED, 'The template of test to generate (headless, e2e, legacy)', 'headless')
+      ->addOption('template', NULL, InputOption::VALUE_REQUIRED, 'The template of test to generate (headless, e2e, mink, legacy)', 'headless')
       ->addArgument('<CRM_Full_ClassName>', InputArgument::REQUIRED, 'The full class name (eg "CRM_Myextension_MyTest" or "Civi\Myextension\MyTest")');
   }
 
@@ -64,19 +69,76 @@ as separate groups:
     $info = new Info($basedir->string('info.xml'));
     $info->load($ctx);
 
-    Civix::generator()->addPhpunit();
-    $this->initTestClass(
-      $input->getArgument('<CRM_Full_ClassName>'), $this->getTestTemplate($input->getOption('template')), $basedir, $ctx, $output);
+    $testTemplateInfo = $this->getTestTemplateInfo($input->getOption('template'));
+    $phpUnitInitFiles = new PHPUnitGenerateInitFiles();
+    $ctx['xmlBuilderClassName'] = $testTemplateInfo['xmlBuilderClassName'] ?? 'CRM\CivixBundle\Builder\PhpUnitXML';
+    $phpUnitInitFiles->initPhpunitXml($basedir->string($testTemplateInfo['phpunitxmlFilename']), $ctx, $output);
+    $ctx['bootstrapTemplate'] = $testTemplateInfo['bootstrapTemplate'];
+    $phpUnitInitFiles->initPhpunitBootstrap($basedir->string('tests', 'phpunit', $testTemplateInfo['bootstrapFilename']), $ctx, $output);
+    $ctx['classnameCallback'] = $testTemplateInfo['classnameCallback'] ?? NULL;
+    $ctx['filenameCallback'] = $testTemplateInfo['filenameCallback'] ?? NULL;
+    foreach ($testTemplateInfo['template'] as $template) {
+      $ctx['template'] = $template;
+      $this->initTestClass(
+        $input->getArgument('<CRM_Full_ClassName>'), $template, $basedir, $ctx, $output);
+    }
 
     return 0;
   }
 
-  protected function getTestTemplate($type) {
+  protected function getTestTemplateInfo($type) {
     $templates = [
-      'e2e' => 'test-e2e.php.php',
-      'headless' => 'test-headless.php.php',
-      'legacy' => 'test-legacy.php.php',
-      'phpunit' => 'test-phpunit.php.php',
+      'e2e' => [
+        'template' => ['test-e2e.php.php'],
+        'phpunitxmlFilename' => 'phpunit.xml.dist',
+        'bootstrapTemplate' => 'phpunit-boot-cv.php.php',
+        'bootstrapFilename' => 'bootstrap.php',
+      ],
+      'headless' => [
+        'template' => ['test-headless.php.php'],
+        'phpunitxmlFilename' => 'phpunit.xml.dist',
+        'bootstrapTemplate' => 'phpunit-boot-cv.php.php',
+        'bootstrapFilename' => 'bootstrap.php',
+      ],
+      'mink' => [
+        'template' => ['test-mink.php.php', 'test-mink-base.php.php'],
+        'xmlBuilderClassName' => 'CRM\CivixBundle\Builder\PhpUnitMinkXML',
+        'phpunitxmlFilename' => 'phpunit.mink.xml.dist',
+        'bootstrapTemplate' => 'phpunit-boot-mink.php.php',
+        'bootstrapFilename' => 'bootstrap.mink.php',
+        'classnameCallback' => function($fullClassName, $ctx) {
+          if ($ctx['template'] === 'test-mink-base.php.php') {
+            // The idea here is take the last component of the namespace in
+            // info.xml and use it as the name of the base class relative to
+            // the provided test class, e.g. if info.xml has
+            // CRM/Myawesomeextension and the provided test class is
+            // Civi\Foo\Tests\BarTest then the base class
+            // becomes Civi\Foo\Tests\MyawesomeextensionBase
+            $explodedNamespace = explode('/', $ctx['namespace']);
+            $baseNamespace = array_pop($explodedNamespace);
+            $parts = explode('\\', $fullClassName);
+            array_pop($parts);
+            return implode('\\', $parts) . "\\{$baseNamespace}Base";
+          }
+          return $fullClassName;
+        },
+        'filenameCallback' => function($fullClassName, $ctx) {
+          // Do the same as normal just prepend a Mink folder.
+          return 'Mink/' . strtr($fullClassName, ['_' => '/', '\\' => '/']) . '.php';
+        },
+      ],
+      'legacy' => [
+        'template' => ['test-legacy.php.php'],
+        'phpunitxmlFilename' => 'phpunit.xml.dist',
+        'bootstrapTemplate' => 'phpunit-boot-cv.php.php',
+        'bootstrapFilename' => 'bootstrap.php',
+      ],
+      'phpunit' => [
+        'template' => ['test-phpunit.php.php'],
+        'phpunitxmlFilename' => 'phpunit.xml.dist',
+        'bootstrapTemplate' => 'phpunit-boot-cv.php.php',
+        'bootstrapFilename' => 'bootstrap.php',
+      ],
     ];
     if (isset($templates[$type])) {
       return $templates[$type];
@@ -107,7 +169,8 @@ as separate groups:
     $parts = explode('\\', $fullClassName);
     $ctx['testClass'] = array_pop($parts);
     $ctx['testNamespace'] = implode('\\', $parts);
-    $testFile = strtr($fullClassName, ['_' => '/', '\\' => '/']) . '.php';
+    $fullClassName = empty($ctx['classnameCallback']) ? $fullClassName : call_user_func($ctx['classnameCallback'], $fullClassName, $ctx);
+    $testFile = empty($ctx['filenameCallback']) ? (strtr($fullClassName, ['_' => '/', '\\' => '/']) . '.php') : call_user_func($ctx['filenameCallback'], $fullClassName, $ctx);
     $testPath = $basedir->string('tests', 'phpunit', $testFile);
 
     $dirs = new Dirs([

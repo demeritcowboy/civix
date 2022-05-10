@@ -22,7 +22,7 @@ class PHPUnitGenerateInitFiles {
 
       $output->writeln(sprintf('<info>Write</info> %s', Files::relativize($bootstrapFile)));
       file_put_contents($bootstrapFile, Civix::templating()
-        ->render('phpunit-boot-cv.php.php', $ctx));
+        ->render($ctx['bootstrapTemplate'], $ctx));
     }
     else {
       $output->writeln(sprintf('<comment>Skip %s: file already exists</comment>', Files::relativize($bootstrapFile)));
@@ -36,7 +36,7 @@ class PHPUnitGenerateInitFiles {
    */
   public function initPhpunitXml($phpunitXmlFile, &$ctx, OutputInterface $output) {
     if (!file_exists($phpunitXmlFile)) {
-      $phpunitXml = new PhpUnitXML($phpunitXmlFile);
+      $phpunitXml = new $ctx['xmlBuilderClassName']($phpunitXmlFile);
       $phpunitXml->init($ctx);
       $phpunitXml->save($ctx, $output);
     }
